@@ -3,41 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lector y Generador de QR Completo</title>
+    <title>QR Pro - Scanner & Generator</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4F46E5">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        /* ... (estilos iguales) ... */
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .app-container {
+            max-width: 480px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+            padding: 28px 24px;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        .app-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .app-header p {
+            font-size: 14px;
+            color: #e0e7ff;
+            opacity: 0.9;
+        }
+
+        /* Navegación por pestañas estilo App Móvil */
+        .tabs-nav {
+            display: flex;
+            background: #f1f5f9;
+            padding: 6px;
+            margin: 20px;
+            border-radius: 14px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.25s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--card-bg);
+            color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .app-body {
+            padding: 0 24px 24px 24px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease;
+            color: var(--text-main);
+            background: #f8fafc;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        button, .action-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+        }
+
+        button:hover, .action-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:active, .action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Contenedor del código QR generado */
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 16px;
+            border: 1px dashed var(--border);
+        }
+
+        #qrcode img {
+            padding: 8px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        /* Lector QR */
+        #reader {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        #reader __video {
+            border-radius: 16px;
+        }
+
+        /* Caja de Resultados del Escáner */
+        .result-box {
+            display: none;
+            margin-top: 20px;
+            padding: 16px;
+            background: #eff6ff;
+            border-radius: 14px;
+            border: 1px solid #bfdbfe;
+        }
+
+        .result-box strong {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #1e40af;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        #result-text {
+            font-size: 15px;
+            color: #1e3a8a;
+            word-break: break-all;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .action-btn {
+            background: #2563eb;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+        }
+        .action-btn:hover { background: #1d4ed8; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Herramienta QR Todo en Uno</h1>
-
-    <!-- SECCIÓN: GENERAR QR -->
-    <div class="section">
-        <h2>Generar Código QR</h2>
-        <input type="text" id="text-input" placeholder="Escribe un enlace, texto o URL de imagen...">
-        <button onclick="generateQR()">Crear QR</button>
-        <div id="qrcode"></div>
+<div class="app-container">
+    <div class="app-header">
+        <h1>QR Pro</h1>
+        <p>Escáner y Generador Inteligente</p>
     </div>
 
-    <!-- SECCIÓN: LEER QR -->
-    <div class="section">
-        <h2>Escanear Código QR</h2>
-        <div id="reader"></div>
-        <div id="result-container" class="result-box">
-            <strong>Contenido detectado:</strong>
-            <p id="result-text"></p>
-            <div id="action-area"></div>
+    <div class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('generate-tab', this)">Generar</button>
+        <button class="tab-btn" onclick="switchTab('scan-tab', this)">Escanear</button>
+    </div>
+
+    <div class="app-body">
+        <div id="generate-tab" class="tab-content active">
+            <div class="input-group">
+                <input type="text" id="text-input" placeholder="Escribe un enlace, texto o URL...">
+            </div>
+            <button onclick="generateQR()">Crear Código QR</button>
+            <div id="qrcode"></div>
+        </div>
+
+        <div id="scan-tab" class="tab-content">
+            <div id="reader"></div>
+            <div id="result-container" class="result-box">
+                <strong>Contenido Detectado</strong>
+                <p id="result-text"></p>
+                <div id="action-area"></div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- CARGAR BIBLIOTECAS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
+    // --- Control de Pestañas ---
+    function switchTab(tabId, button) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        button.classList.add('active');
+    }
+
     // --- Generar QR ---
     const qrContainer = document.getElementById("qrcode");
     let qrcode = new QRCode(qrContainer, { width: 200, height: 200 });
@@ -54,12 +287,7 @@
 
     // --- Utilidades ---
     function isUrl(str) {
-        try {
-            new URL(str);
-            return true;
-        } catch (_) {
-            return false;  
-        }
+        try { new URL(str); return true; } catch (_) { return false; }
     }
 
     function isImageUrl(url) {
@@ -94,9 +322,7 @@
                             document.body.removeChild(a);
                             window.URL.revokeObjectURL(url);
                         })
-                        .catch(() => {
-                            alert("No se pudo descargar la imagen. Verifica el enlace.");
-                        });
+                        .catch(() => alert("No se pudo descargar la imagen."));
                 };
                 actionArea.appendChild(downloadBtn);
             } else {
@@ -112,8 +338,8 @@
             copyBtn.innerText = "Copiar Texto";
             copyBtn.onclick = () => {
                 navigator.clipboard.writeText(decodedText)
-                    .then(() => alert("¡Texto copiado al portapapeles!"))
-                    .catch(() => alert("No se pudo copiar el texto"));
+                    .then(() => alert("¡Texto copiado!"))
+                    .catch(() => alert("Error al copiar"));
             };
             actionArea.appendChild(copyBtn);
         }
@@ -126,6 +352,15 @@
         false
     );
     html5QrcodeScanner.render(onScanSuccess);
+
+    // --- Registro Service Worker ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registrado'))
+                .catch(err => console.error('Error SW', err));
+        });
+    }
 </script>
 
 </body>
