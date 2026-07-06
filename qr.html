@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lector y Generador de QR Completo</title>
+    <style>
+        /* ... (estilos iguales) ... */
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Herramienta QR Todo en Uno</h1>
+
+    <!-- SECCIÓN: GENERAR QR -->
+    <div class="section">
+        <h2>Generar Código QR</h2>
+        <input type="text" id="text-input" placeholder="Escribe un enlace, texto o URL de imagen...">
+        <button onclick="generateQR()">Crear QR</button>
+        <div id="qrcode"></div>
+    </div>
+
+    <!-- SECCIÓN: LEER QR -->
+    <div class="section">
+        <h2>Escanear Código QR</h2>
+        <div id="reader"></div>
+        <div id="result-container" class="result-box">
+            <strong>Contenido detectado:</strong>
+            <p id="result-text"></p>
+            <div id="action-area"></div>
+        </div>
+    </div>
+</div>
+
+<!-- CARGAR BIBLIOTECAS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+    // --- Generar QR ---
+    const qrContainer = document.getElementById("qrcode");
+    let qrcode = new QRCode(qrContainer, { width: 200, height: 200 });
+
+    function generateQR() {
+        const text = document.getElementById("text-input").value.trim();
+        if (text) {
+            qrcode.clear();
+            qrcode.makeCode(text);
+        } else {
+            alert("Por favor, introduce algún texto o enlace.");
+        }
+    }
+
+    // --- Utilidades ---
+    function isUrl(str) {
+        try {
+            new URL(str);
+            return true;
+        } catch (_) {
+            return false;  
+        }
+    }
+
+    function isImageUrl(url) {
+        return (/\.(jpeg|jpg|gif|png|webp|bmp)$/i).test(url) || url.startsWith('data:image/');
+    }
+
+    // --- Lector QR ---
+    function onScanSuccess(decodedText) {
+        const resultContainer = document.getElementById("result-container");
+        const resultText = document.getElementById("result-text");
+        const actionArea = document.getElementById("action-area");
+        
+        resultContainer.style.display = "block";
+        resultText.innerText = decodedText;
+        actionArea.innerHTML = "";
+
+        if (isUrl(decodedText)) {
+            if (isImageUrl(decodedText)) {
+                const downloadBtn = document.createElement("button");
+                downloadBtn.className = "action-btn";
+                downloadBtn.innerText = "Descargar Imagen";
+                downloadBtn.onclick = () => {
+                    fetch(decodedText)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'imagen_qr.' + decodedText.split('.').pop();
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+                        })
+                        .catch(() => {
+                            alert("No se pudo descargar la imagen. Verifica el enlace.");
+                        });
+                };
+                actionArea.appendChild(downloadBtn);
+            } else {
+                const openBtn = document.createElement("button");
+                openBtn.className = "action-btn";
+                openBtn.innerText = "Abrir Enlace";
+                openBtn.onclick = () => window.open(decodedText, '_blank');
+                actionArea.appendChild(openBtn);
+            }
+        } else {
+            const copyBtn = document.createElement("button");
+            copyBtn.className = "action-btn";
+            copyBtn.innerText = "Copiar Texto";
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(decodedText)
+                    .then(() => alert("¡Texto copiado al portapapeles!"))
+                    .catch(() => alert("No se pudo copiar el texto"));
+            };
+            actionArea.appendChild(copyBtn);
+        }
+    }
+
+    // --- Inicializar escáner ---
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", 
+        { fps: 10, qrbox: 250 }, 
+        false
+    );
+    html5QrcodeScanner.render(onScanSuccess);
+</script>
+
+</body>
+</html>

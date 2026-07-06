@@ -1,0 +1,18 @@
+{
+  "name": "Herramienta QR Todo en Uno",
+  "short_name": "QR TodoEnUno",
+  "description": "Lector y generador de códigos QR que funciona offline.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme-color": "#2196F3",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/241/241508.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
